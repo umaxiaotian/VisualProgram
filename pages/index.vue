@@ -1,83 +1,52 @@
 <template>
-  <v-row justify="center" align="center">
-    <v-col cols="12" sm="8" md="6">
-      <v-card class="logo py-4 d-flex justify-center">
-        <NuxtLogo />
-        <VuetifyLogo />
-      </v-card>
-      <v-card>
-        <v-card-title class="headline">
-          Welcome to the Vuetify + Nuxt.js template
-        </v-card-title>
-        <v-card-text>
-          <p>Vuetify is a progressive Material Design component framework for Vue.js. It was designed to empower developers to create amazing applications.</p>
-          <p>
-            For more information on Vuetify, check out the <a
-              href="https://vuetifyjs.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              documentation
-            </a>.
-          </p>
-          <p>
-            If you have questions, please join the official <a
-              href="https://chat.vuetifyjs.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="chat"
-            >
-              discord
-            </a>.
-          </p>
-          <p>
-            Find a bug? Report it on the github <a
-              href="https://github.com/vuetifyjs/vuetify/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="contribute"
-            >
-              issue board
-            </a>.
-          </p>
-          <p>Thank you for developing with Vuetify and I look forward to bringing more exciting features in the future.</p>
-          <div class="text-xs-right">
-            <em><small>&mdash; John Leider</small></em>
-          </div>
-          <hr class="my-3">
-          <a
-            href="https://nuxtjs.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Nuxt Documentation
-          </a>
-          <br>
-          <a
-            href="https://github.com/nuxt/nuxt.js"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Nuxt GitHub
-          </a>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            color="primary"
-            nuxt
-            to="/inspire"
-          >
-            Continue
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-col>
-  </v-row>
+  <div style="width:90vw;height:90vh">
+    <baklava-editor :plugin="viewPlugin"></baklava-editor>
+  </div>
 </template>
 
 <script>
+import { Editor, NodeBuilder }  from "@baklavajs/core"
+import { ViewPlugin }           from "@baklavajs/plugin-renderer-vue"
+import { Engine }               from "@baklavajs/plugin-engine"
+import { InterfaceTypePlugin }  from "@baklavajs/plugin-interface-types"
+import { OptionPlugin }         from "@baklavajs/plugin-options-vue"
+import { OutputNode } from '@/components/node/OutputNode.ts'
 export default {
-  name: 'IndexPage'
+    data: () => ({
+        editor: new Editor(),
+        viewPlugin: new ViewPlugin(),
+        engine: new Engine(true),
+        intfTypePlugin: new InterfaceTypePlugin()
+    }),
+    created() {
+      this.editor.use(this.viewPlugin);
+      this.editor.use(this.engine)
+      this.editor.use(new OptionPlugin())
+      this.editor.use(this.intfTypePlugin)
+      this.intfTypePlugin.addType("number", "#00FF00");
+      this.viewPlugin.enableMinimap = true;
+    // create new node
+    const SelectTestNode = new NodeBuilder("SelectTestNode")
+      .addOption("Simple", "SelectOption", "A", undefined, { items: ["A", "B", "C"] })
+      .addOption("Advanced", "SelectOption", 3, undefined, { items: [
+          { text: "X", value: 1 },
+          { text: "Y", value: 2 },
+          { text: "Z", value: 3 },
+      ] })
+      .addOutputInterface("Simple")
+      .addOutputInterface("Advanced")
+      .onCalculate((n) => {
+          n.getInterface("Simple").value = n.getOptionValue("Simple");
+          n.getInterface("Advanced").value = n.getOptionValue("Advanced");
+      })
+      .build();
+    // add node to editor
+    this.editor.registerNodeType("SelectTestNode", SelectTestNode)
+    this.editor.registerNodeType("OutputNode", OutputNode)
+     
+    },
+    methods: {
+      
+    }
 }
 </script>
